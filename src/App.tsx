@@ -1,12 +1,22 @@
-import { ModeToggle } from './components/mode-toggle';
-import { Button } from './components/ui/button';
+import { Header } from './components/header';
+import { PageContainer } from './components/page-container';
+import { PageContent } from './components/page-content';
+import { useTasksContext } from './contexts/tasks-context';
 
 export function App() {
+  const { data } = useTasksContext();
+
+  if (!data) {
+    return;
+  }
+
+  console.log(data);
+
   return (
-    <div>
-      <h1>Task Manager</h1>
-      <Button>Meu botão</Button>
-      <ModeToggle />
-    </div>
+    <PageContainer>
+      <PageContent>
+        <Header />
+      </PageContent>
+    </PageContainer>
   );
 }

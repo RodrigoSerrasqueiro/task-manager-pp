@@ -51,6 +51,13 @@ export default {
           5: "hsl(var(--chart-5))",
         },
       },
+      screens: {
+        xm: "320px",
+        sm: "480px",
+        md: "768",
+        lg: "1024px",
+        xl: "1440px",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

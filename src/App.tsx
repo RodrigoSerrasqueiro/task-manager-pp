@@ -79,7 +79,7 @@ export function App() {
         )}
 
         {tasksPending.length > 0 && (
-          <div className='flex items-center gap-3'>
+          <div className='w-full flex items-center gap-3'>
             <h2>Pendentes</h2>
             <Separator />
           </div>
@@ -92,7 +92,7 @@ export function App() {
         </div>
 
         {tasksCompleted.length > 0 && (
-          <div className='flex items-center gap-3 my-3'>
+          <div className='w-full flex items-center gap-3 my-3'>
             <h2>Concluídas</h2>
             <Separator />
           </div>

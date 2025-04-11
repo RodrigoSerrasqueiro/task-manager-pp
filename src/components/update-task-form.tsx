@@ -14,21 +14,22 @@ import { Input } from './ui/input';
 import { images } from '@/utils/images';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import type { NewTask } from '@/interfaces/interfaces';
+import type { UpdatedTask, UpdateTaskFormProps } from '@/interfaces/interfaces';
 import { useMutation } from '@tanstack/react-query';
-import { createNewTask } from '@/routes/create-new-task';
 import { toast } from 'sonner';
 import { Loader } from 'lucide-react';
 import { useState } from 'react';
 import type { AxiosError } from 'axios';
+import { updateTask } from '@/routes/update-task';
 
-export function CreateTaskForm() {
+export function UpdateTaskForm({ task, onClose }: UpdateTaskFormProps) {
   const { refetchTaskData } = useTasksContext();
   const minCharacteresOfTitle = 3;
   const maxCharactersOfTitle = 25;
   const [errorMessage, setErrorMessage] = useState<string | undefined>('');
 
   const formSchema = z.object({
+    id: z.string(),
     title: z
       .string()
       .min(minCharacteresOfTitle, {
@@ -48,21 +49,23 @@ export function CreateTaskForm() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      images: []
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      images: task.images
     }
   });
 
   const {
-    mutate: createTaskRequest,
+    mutate: updateTaskRequest,
     isPending,
     isError
   } = useMutation({
-    mutationFn: createNewTask,
+    mutationFn: updateTask,
     onSuccess: () => {
-      toast.success('Nova tarefa criada com sucesso!');
+      toast.success('Tarefa atualizada com sucesso!');
       resetForm();
+      onClose();
       refetchTaskData?.();
     },
     onError: (error: AxiosError) => {
@@ -71,8 +74,8 @@ export function CreateTaskForm() {
     }
   });
 
-  const handleSubmit = (formData: NewTask) => {
-    createTaskRequest({ task: formData });
+  const handleSubmit = (formData: UpdatedTask) => {
+    updateTaskRequest({ updatedTask: formData });
   };
 
   const resetForm = () => {
@@ -185,12 +188,16 @@ export function CreateTaskForm() {
               disabled={isPending}
               onClick={form.handleSubmit(handleSubmit)}
             >
-              {isPending ? <Loader className='animate-spin' /> : 'Criar tarefa'}
+              {isPending ? (
+                <Loader className='animate-spin' />
+              ) : (
+                'Salvar alterações'
+              )}
             </Button>
           </div>
           {isError && errorMessage && (
             <p className='text-[0.8rem] font-medium text-red-500'>
-              {`Erro ao criar nova tarefa. Erro: ${errorMessage}`}
+              {`Erro ao atualizar tarefa. Erro: ${errorMessage}`}
             </p>
           )}
         </form>

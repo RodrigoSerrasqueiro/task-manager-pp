@@ -37,14 +37,65 @@ import {
 import { Button } from './ui/button';
 import { CheckCircle, Circle, Edit, Trash } from 'lucide-react';
 import { Toggle } from './ui/toggle';
+import { UpdateTaskForm } from './update-task-form';
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTasksContext } from '@/contexts/tasks-context';
+import type { AxiosError } from 'axios';
+import { deleteTask } from '@/routes/delete-task';
+import { changeTaskCompletion } from '@/routes/change-task-completion';
 
 export function TaskCard({ task }: TaskCardProps) {
+  const [updateDialogIsOpen, setUpdateDialogIsOpen] = useState<boolean>(false);
+  const { refetchTaskData } = useTasksContext();
+
+  const { mutate: changeTaskCompletionRequest } = useMutation({
+    mutationFn: changeTaskCompletion,
+    onSuccess: () => {
+      toast.success('Parabéns!!! Você completou mais uma tarefa.');
+      refetchTaskData?.();
+    },
+    onError: (error: AxiosError) => {
+      console.error(error);
+      if (error.response) {
+        const errorData = error.response.data as { message: string };
+        toast.error(
+          `Erro ao marcar tarefa como concluída. Erro: ${errorData.message}`
+        );
+      }
+    }
+  });
+
+  const handleChangeTaskCompletion = () => {
+    changeTaskCompletionRequest({ taskId: task.id });
+  };
+
+  const { mutate: deleteTaskRequest } = useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => {
+      toast.success('Tarefa deletada com sucesso!');
+      refetchTaskData?.();
+    },
+    onError: (error: AxiosError) => {
+      console.error(error);
+      if (error.response) {
+        const errorData = error.response.data as { message: string };
+        toast.error(`Erro ao deletar tarefa. Erro: ${errorData.message}`);
+      }
+    }
+  });
+
+  const handleDeleteTask = () => {
+    deleteTaskRequest({ taskId: task.id });
+  };
+
   return (
     <Card
       className={`w-full max-w-[400px] ${task.completed ? 'border-primary' : 'border'}`}
     >
       <div className='absolute right-2 top-2 flex items-center gap-3'>
-        <Dialog>
+        <Dialog open={updateDialogIsOpen} onOpenChange={setUpdateDialogIsOpen}>
           <DialogTrigger asChild>
             <Button size='icon' variant='ghost'>
               <Edit />
@@ -58,7 +109,14 @@ export function TaskCard({ task }: TaskCardProps) {
               </DialogDescription>
             </DialogHeader>
 
-            <div>Aqui será o formulário</div>
+            <div className='grid gap-4 py-4'>
+              <div className='flex flex-col gap-2'>
+                <UpdateTaskForm
+                  task={task}
+                  onClose={() => setUpdateDialogIsOpen(false)}
+                />
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -79,7 +137,10 @@ export function TaskCard({ task }: TaskCardProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction className='text-white bg-destructive hover:bg-destructive/90'>
+              <AlertDialogAction
+                onClick={handleDeleteTask}
+                className='text-white bg-destructive hover:bg-destructive/90'
+              >
                 Deletar
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -112,7 +173,10 @@ export function TaskCard({ task }: TaskCardProps) {
         </Carousel>
       </CardContent>
       <CardFooter className='flex justify-center'>
-        <Toggle pressed={task.completed}>
+        <Toggle
+          pressed={task.completed}
+          onPressedChange={handleChangeTaskCompletion}
+        >
           {task.completed ? <CheckCircle /> : <Circle />}
           {task.completed ? 'Marcar como pendente' : 'Marcar como concluída'}
         </Toggle>
